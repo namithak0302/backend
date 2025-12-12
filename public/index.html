@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Path Pilot-AI Career Guide </title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- jsPDF (for PDF download) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{
+    --glass: rgba(255,255,255,0.14);
+    --accent1: #6c4eff;
+    --accent2: #00d4ff;
+    --white: #ffffff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(135deg,#0f1724 0%, #111827 30%, #061421 100%);
+    color:var(--white);
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:36px 20px;
+  }
+  .wrap{ width:100%; max-width:1100px; display:grid; grid-template-columns: 1fr 430px; gap:28px; align-items:start; }
+
+  .card{ background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border-radius:14px; padding:22px; box-shadow: 0 12px 40px rgba(2,6,23,0.6); backdrop-filter: blur(8px) saturate(140%); border: 1px solid rgba(255,255,255,0.03); }
+
+  h1{ margin:0 0 10px 0; font-size:22px; letter-spacing:0.2px;}
+  p.lead{margin-top:6px; color:rgba(255,255,255,0.75)}
+
+  .question-area{margin-top:18px;}
+  .q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .q-index{font-weight:600; color:rgba(255,255,255,0.9)}
+  .progress{ height:10px; background:rgba(255,255,255,0.06); border-radius:8px; overflow:hidden; flex:1; margin-left:12px; }
+  .progress > i{ display:block; height:100%; width:0%; background: linear-gradient(90deg,var(--accent1),var(--accent2)); transition:width .35s; }
+
+  .question-text{font-size:18px;margin:12px 0 6px 0}
+  .answers{display:grid;gap:10px}
+  .ans-btn{ background:transparent;border:1px solid rgba(255,255,255,0.06); padding:10px 12px;border-radius:10px;color:var(--white); cursor:pointer;text-align:left;font-size:15px; }
+  .ans-btn:hover{ transform:translateY(-3px); box-shadow: 0 8px 30px rgba(12,22,60,0.6) }
+  .ans-btn.selected{ border-color: rgba(255,255,255,0.24); background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); }
+
+  .navs{display:flex;gap:12px;margin-top:14px}
+  .btn{ padding:11px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:#061421; }
+  .btn.ghost{ background: transparent; color:var(--white); border:1px solid rgba(255,255,255,0.06) }
+
+  .side{ position:sticky; top:36px; display:flex;flex-direction:column; gap:16px; }
+
+  .result-card{ padding:16px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); }
+  .loader{ display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px; }
+  .spinner{ width:46px;height:46px;border-radius:50%;border:5px solid rgba(255,255,255,0.06);border-top-color:var(--accent2); animation:spin 1s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg) } }
+
+  .chart-wrap{ background:white;padding:12px;border-radius:12px; }
+  canvas{ max-width:100%; display:block !important; height:auto !important; }
+
+  .careers{ margin-top:12px; font-size:15px; line-height:1.5; color:rgba(0,0,0,0.85) }
+  .career-pill{ display:inline-block;background:rgba(12,18,40,0.03); padding:8px 10px;border-radius:10px;margin:6px 6px 0 0;color:#07203a;font-weight:600 }
+
+  .pdf-btn{ margin-top:10px; width:100%; padding:8px; border-radius:8px; background:#07203a; color:white; border:none; cursor:pointer; font-weight:700 }
+
+  @media(max-width:980px){ .wrap{ grid-template-columns: 1fr; padding-bottom:40px; } .side{ position:relative; top:auto; } }
+</style>
+</head>
+<body>
+  
+  <div class="wrap">
+
+    <!-- LEFT: Quiz -->
+    <div class="card">
+      <h1>AI Career Guidance — Skill & CS domain quiz</h1>
+      <p class="lead">Enter your name, answer honestly. At the end you can download a PDF roadmap.</p>
+
+      <!-- Name input -->
+      <div style="margin-top:12px;">
+        <label style="font-weight:700">Your name</label>
+        <input id="userName" placeholder="Type your name (optional)" style="width:100%;padding:10px;border-radius:8px;margin-top:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:white">
+      </div>
+
+      <div class="question-area">
+        <div class="q-header">
+          <div class="q-index" id="qIndex">Question 1 / 20</div>
+          <div class="progress" title="progress"><i id="barFill"></i></div>
+        </div>
+
+        <div class="question-text" id="qText">Loading question…</div>
+
+        <div class="answers" id="answers"></div>
+
+        <div class="navs">
+          <button id="prevBtn" class="btn ghost">Previous</button>
+          <div style="flex:1"></div>
+          <button id="nextBtn" class="btn">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results + Chart -->
+    <div class="side">
+      <div class="result-card">
+        <div id="statusBox">
+          <strong>Progress</strong>
+          <p style="margin:6px 0 0 0;color:rgba(255,255,255,0.8)">Complete the quiz to see your personality breakdown and recommended domains; then download a PDF roadmap.</p>
+        </div>
+
+        <div id="loaderBox" class="loader" style="display:none">
+          <div class="spinner"></div>
+          <div style="font-weight:600">Analyzing your responses…</div>
+        </div>
+
+        <div id="summaryBox" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Your top fit</strong>
+            <div id="topType" style="font-weight:700"></div>
+          </div>
+          <div class="careers" id="careerList"></div>
+          <button id="downloadPdfBtn" class="pdf-btn">Download PDF Roadmap</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Personality & Domain Scores</strong>
+          <small style="color:rgba(255,255,255,0.6)">Bar chart</small>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="scoreChart" width="400" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+/* QUESTIONS (same as before) */
+const QUESTIONS = [
+  { q: "I enjoy solving logical or math problems.", cat: "Analytical" },
+  { q: "I like creating visual designs, graphics or interfaces.", cat: "UIUX" },
+  { q: "I enjoy explaining concepts and helping others learn.", cat: "Social" },
+  { q: "I am excited about experimenting with new technologies.", cat: "Technical" },
+  { q: "I naturally take the lead in group projects.", cat: "Leadership" },
+
+  { q: "I enjoy understanding how websites and web apps are built.", cat: "WebDev" },
+  { q: "I like producing creative content (graphics, videos, writing).", cat: "Creative" },
+  { q: "I am comfortable working with datasets and spreadsheets.", cat: "DataScience" },
+  { q: "I enjoy building mobile apps or exploring mobile UX.", cat: "AppDev" },
+  { q: "I get curious about security, hacking, and protecting systems.", cat: "Cybersecurity" },
+
+  { q: "I enjoy researching patterns and training machine learning models.", cat: "AI" },
+  { q: "I prefer structured tasks and analyzing detailed information.", cat: "Analytical" },
+  { q: "I have an eye for UI details and user experience improvements.", cat: "UIUX" },
+  { q: "I like building APIs, backend systems, and server logic.", cat: "WebDev" },
+  { q: "I enjoy planning, coordinating and managing tasks for a team.", cat: "Leadership" },
+
+  { q: "I want to work with cloud platforms (AWS, Azure, GCP).", cat: "Cloud" },
+  { q: "I enjoy writing code and solving real programming problems.", cat: "Technical" },
+  { q: "I am interested in data cleaning, visualization, and dashboards.", cat: "DataScience" },
+  { q: "I enjoy prototyping UI ideas and testing them with real users.", cat: "UIUX" },
+  { q: "I enjoy learning about neural networks and AI applications.", cat: "AI" }
+];
+
+const CATS = ["Analytical","Creative","Social","Technical","Leadership","AI","WebDev","AppDev","Cybersecurity","DataScience","Cloud","UIUX"];
+
+let index = 0;
+let answersStore = new Array(QUESTIONS.length).fill(null);
+let scores = {};
+CATS.forEach(c => scores[c] = 0);
+
+/* DOM references */
+const qIndex = document.getElementById('qIndex');
+const barFill = document.getElementById('barFill');
+const qText = document.getElementById('qText');
+const answersDiv = document.getElementById('answers');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+const loaderBox = document.getElementById('loaderBox');
+const summaryBox = document.getElementById('summaryBox');
+const statusBox = document.getElementById('statusBox');
+const topTypeEl = document.getElementById('topType');
+const careerListEl = document.getElementById('careerList');
+const scoreCanvas = document.getElementById('scoreChart').getContext('2d');
+
+const userNameInput = document.getElementById('userName');
+const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+let scoreChart = null;
+
+const OPTIONS = [
+  { label: "Strongly Agree", value: 1 },
+  { label: "Agree", value: 0.75 },
+  { label: "Neutral", value: 0.5 },
+  { label: "Disagree", value: 0.25 },
+  { label: "Strongly Disagree", value: 0 }
+];
+
+function renderQuestion(){
+  const q = QUESTIONS[index];
+  qIndex.innerText = `Question ${index+1} / ${QUESTIONS.length}`;
+  const pct = Math.round(((index)/QUESTIONS.length)*100);
+  barFill.style.width = pct + '%';
+  qText.innerText = q.q;
+
+  answersDiv.innerHTML = '';
+  OPTIONS.forEach((opt) => {
+    const b = document.createElement('button');
+    b.className = 'ans-btn';
+    b.innerText = opt.label;
+    b.dataset.val = opt.value;
+    b.onclick = (ev) => {
+      answersStore[index] = opt.value;
+      document.querySelectorAll('.ans-btn').forEach(n=>n.classList.remove('selected'));
+      b.classList.add('selected');
+    };
+    if (answersStore[index] === opt.value) b.classList.add('selected');
+    answersDiv.appendChild(b);
+  });
+
+  prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
+  nextBtn.innerText = (index === QUESTIONS.length - 1) ? 'Submit' : 'Next';
+}
+
+prevBtn.onclick = () => { if(index > 0) { index--; renderQuestion(); } };
+nextBtn.onclick = () => {
+  if(answersStore[index] === null){ alert('Please select an option for this question.'); return; }
+  if(index < QUESTIONS.length - 1){ index++; renderQuestion(); } else { analyzeAndShow(); }
+};
+
+function analyzeAndShow(){
+  statusBox.style.display = 'none';
+  loaderBox.style.display = 'flex';
+  CATS.forEach(c => scores[c] = 0);
+
+  QUESTIONS.forEach((q,i) => {
+    const cat = q.cat;
+    const val = answersStore[i] || 0;
+    if(scores.hasOwnProperty(cat)) scores[cat] += val;
+  });
+
+  setTimeout(()=>{
+    loaderBox.style.display = 'none';
+    summaryBox.style.display = 'block';
+    renderChart();
+    showRecommendations();
+    saveResult();
+  }, 700);
+}
+
+function renderChart(){
+  const labels = CATS.map(s => s.replace(/([A-Z])/g, ' $1').trim());
+  const data = CATS.map(c => Math.round((scores[c] || 0) * 100) / 100);
+
+  if(scoreChart) scoreChart.destroy();
+
+  scoreChart = new Chart(scoreCanvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Score (higher = stronger fit)',
+        data: data,
+        backgroundColor: labels.map((_,i) => i%2===0 ? 'rgba(108,78,255,0.9)' : 'rgba(0,212,255,0.85)'),
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 0.5 } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+const CAREER_MAP = {
+  Analytical: ["Data Analyst","Business Analyst","Research Scientist"],
+  Creative: ["UI/UX Designer","Graphic Designer","Content Creator"],
+  Social: ["Teacher","HR Specialist","Counselor"],
+  Technical: ["Software Developer","Systems Engineer","DevOps Engineer"],
+  Leadership: ["Product Manager","Team Lead","Operations Manager"],
+
+  AI: ["ML Engineer","AI Researcher","Computer Vision Engineer"],
+  WebDev: ["Frontend Developer","Backend Developer","Full-Stack Developer"],
+  AppDev: ["Android/iOS Developer","Flutter Developer","Mobile QA Engineer"],
+  Cybersecurity: ["Security Analyst","Penetration Tester","SOC Analyst"],
+  DataScience: ["Data Scientist","Data Engineer","BI Developer"],
+  Cloud: ["Cloud Engineer","Cloud Architect","DevOps Engineer"],
+  UIUX: ["UX Researcher","Product Designer","UI Designer"]
+};
+
+function showRecommendations(){
+  const top = Object.keys(scores).reduce((a,b) => (scores[a]||0) > (scores[b]||0) ? a : b );
+  topTypeEl.innerText = top.replace(/([A-Z])/g, ' $1').trim();
+
+  let recs = CAREER_MAP[top] ? CAREER_MAP[top].slice(0,4) : [];
+  const personalityPreferred = ["Analytical","Creative","Social","Technical","Leadership"];
+  if(!personalityPreferred.includes(top)){
+    const topPersonality = personalityPreferred.reduce((a,b) => (scores[a]||0) > (scores[b]||0) ? a : b);
+    recs = recs.concat(CAREER_MAP[topPersonality].slice(0,2));
+  }
+
+  careerListEl.innerHTML = recs.map(r => `<span class="career-pill">${r}</span>`).join('');
+}
+
+/* Save results to backend */
+async function saveResult(){
+  const payload = {
+    timestamp: new Date().toISOString(),
+    name: (userNameInput.value || '').trim(),
+    scores,
+    answers: answersStore
+  };
+
+  try {
+    await fetch('/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  } catch (e) { console.warn('Save failed', e); }
+}
+
+/* PDF generation using jsPDF */
+downloadPdfBtn.onclick = () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const name = (userNameInput.value || 'Anonymous').trim();
+  const top = Object.keys(scores).reduce((a,b) => (scores[a]||0) > (scores[b]||0) ? a : b );
+
+  doc.setFontSize(18);
+  doc.text(`Career Roadmap — ${name}`, 14, 20);
+  doc.setFontSize(12);
+  doc.text(`Top fit: ${top}`, 14, 32);
+
+  // Recommended careers
+  const recs = Array.from(document.querySelectorAll('.career-pill')).map(n => n.textContent);
+  doc.setFontSize(13);
+  doc.text('Recommended Careers:', 14, 46);
+  doc.setFontSize(11);
+  recs.forEach((r,i) => doc.text(`${i+1}. ${r}`, 18, 56 + i*8));
+
+  // Add a short roadmap based on top domain/type
+  const roadmapMap = {
+    Analytical:["Learn Excel & SQL","Practice data analysis projects","Learn statistics & Python","Create dashboards (Tableau/PowerBI)","Apply for analyst internships"],
+    Creative:["Learn Figma/Adobe","Build a design portfolio","Practice case studies","Take freelance projects","Join design communities"],
+    Social:["Take teaching/tutoring sessions","Improve public speaking","Run community events","Share workshops","Apply for junior roles"],
+    Technical:["Learn a programming language (Python/JS)","Build 3 projects","Learn DSA basics","Use Git & GitHub","Apply for internships"],
+    Leadership:["Manage small projects","Learn communication & stakeholder mgmt","Run team projects","Take PM basics course","Apply for coordinator roles"],
+    AI:["Learn Python & ML basics","Do ML projects with datasets","Learn TensorFlow/PyTorch","Build model demos","Participate in ML competitions"],
+    WebDev:["Learn HTML/CSS/JS","Build 3 websites","Learn a backend (Node/Python)","Deploy apps","Create portfolio"],
+    AppDev:["Learn Android/iOS basics or Flutter","Build mobile apps","Test & publish to Play/App Store","Work on UI/UX","Apply for mobile internships"],
+    Cybersecurity:["Learn networking basics","Practice secure coding","Study common vulnerabilities","Join CTFs","Apply for security internships"],
+    DataScience:["Learn Python & pandas","Work on datasets","Learn ML basics","Build dashboards & reports","Share projects"],
+    Cloud:["Learn AWS/Azure/GCP basics","Practice deployments","Learn Docker & Kubernetes","Build infra projects","Get cloud certs"],
+    UIUX:["Learn Figma & prototyping","Do usability testing","Build case-studies","Design portfolio","Freelance or intern"]
+  };
+
+  const roadmap = roadmapMap[top] || roadmapMap['Technical'];
+  doc.setFontSize(13);
+  doc.text('Roadmap:', 14, 56 + recs.length*8 + 10);
+  doc.setFontSize(11);
+  roadmap.forEach((r,i) => doc.text(`${i+1}. ${r}`, 18, 74 + recs.length*8 + i*8));
+
+  doc.save(`${name || 'result'}-career-roadmap.pdf`);
+};
+
+/* initial render */
+renderQuestion();
+</script>
+</body>
+</html>
