@@ -319,7 +319,7 @@ async function saveResult(){
   };
 
   try {
-    await fetch('/analyze', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    await fetch('https://backend-production-8233.up.railway.app/analyse', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
   } catch (e) { console.warn('Save failed', e); }
 }
 
